@@ -135,66 +135,53 @@ fetch("https://lichess.org/api/swiss/qMebYahN/results", {
   document.getElementById("ranking").innerHTML = html;
 });
 
-// ================= RODADAS (REAL) =================
+// ================= RODADAS =================
 fetch("https://lichess.org/api/swiss/qMebYahN/games", {
   headers: { "Accept": "application/x-ndjson" }
 })
 .then(r => r.text())
 .then(t => {
-  const linhas = t.trim().split("\n");
-
-  let rodadas = {};
-
-  linhas.forEach(l => {
-    if (!l) return;
-
-    const j = JSON.parse(l);
-
-    // IGNORA se não tiver rodada
-    if (!j.round) return;
-
-    const round = j.round;
-
-    const white = j.players.white?.user?.name || "BYE";
-    const black = j.players.black?.user?.name || "BYE";
-
-    let resultado = "-";
-    let classe = "";
-
-    if (j.status === "draw") {
-      resultado = "½ x ½";
-      classe = "draw";
-    } else if (j.winner === "white") {
-      resultado = "1 x 0";
-      classe = "win";
-    } else if (j.winner === "black") {
-      resultado = "0 x 1";
-      classe = "loss";
-    }
-
-    if (!rodadas[round]) {
-      rodadas[round] = [];
-    }
-
-    rodadas[round].push(`
-      <p class="${classe}">
-        ${white} ${resultado} ${black}
-      </p>
-    `);
-  });
+  const linhas = t.trim().split("\n").filter(l => l);
 
   let html = "";
+  let rodada = 1;
 
-  Object.keys(rodadas)
-    .sort((a, b) => a - b)
-    .forEach(r => {
-      html += `
-        <div class="rodada">
-          <h3>Rodada ${r}</h3>
-          ${rodadas[r].join("")}
-        </div>
-      `;
-    });
+  const jogadores = 5;
+  const jogosPorRodada = Math.floor(jogadores / 2); // 2 jogos
+
+  for (let i = 0; i < linhas.length; i += jogosPorRodada) {
+
+    html += `<div class="rodada"><h3>Rodada ${rodada}</h3>`;
+
+    for (let j = 0; j < jogosPorRodada; j++) {
+      const linha = linhas[i + j];
+      if (!linha) continue;
+
+      const game = JSON.parse(linha);
+
+      const white = game.players.white?.user?.name || "BYE";
+      const black = game.players.black?.user?.name || "BYE";
+
+      let resultado = "-";
+      let classe = "";
+
+      if (game.status === "draw") {
+        resultado = "½ x ½";
+        classe = "draw";
+      } else if (game.winner === "white") {
+        resultado = "1 x 0";
+        classe = "win";
+      } else if (game.winner === "black") {
+        resultado = "0 x 1";
+        classe = "loss";
+      }
+
+      html += `<p class="${classe}">${white} ${resultado} ${black}</p>`;
+    }
+
+    html += `</div>`;
+    rodada++;
+  }
 
   document.getElementById("rodadas").innerHTML = html;
 });
