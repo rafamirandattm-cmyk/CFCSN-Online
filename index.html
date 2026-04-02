@@ -7,12 +7,14 @@
 
 <h1>CFCSN - Torneios</h1>
 
-<div id="torneio"></div>
+<div id="torneio">Carregando...</div>
 
 <script>
 fetch("https://lichess.org/api/swiss/qMebYahN")
-  .then(res => res.json())
-  .then(data => {
+  .then(res => res.text())
+  .then(text => {
+    const data = JSON.parse(text);
+
     document.getElementById("torneio").innerHTML = `
       <h2>${data.name}</h2>
       <p>Status: ${data.status}</p>
