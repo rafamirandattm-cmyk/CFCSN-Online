@@ -4,6 +4,9 @@
   <title>CFCSN</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- jQuery (OBRIGATÓRIO) -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
   <!-- Chessboard -->
   <link rel="stylesheet" href="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard.min.css">
   <script src="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard.min.js"></script>
@@ -109,7 +112,7 @@
 
 <script>
 
-// INICIA TABULEIRO
+// inicia tabuleiro
 var board = Chessboard('board', {
   position: 'start'
 });
@@ -224,7 +227,7 @@ Promise.all([
 
 });
 
-// RODADAS + CLICK NO TABULEIRO
+// RODADAS
 fetch("https://lichess.org/api/swiss/qMebYahN/games", {
   headers: { "Accept": "application/x-ndjson" }
 })
@@ -269,7 +272,7 @@ fetch("https://lichess.org/api/swiss/qMebYahN/games", {
 
 });
 
-// CARREGAR PARTIDA NO TABULEIRO
+// carregar posição no tabuleiro
 function carregarPartida(gameId) {
 
   fetch(`https://lichess.org/game/export/${gameId}?moves=false&tags=false&clocks=false&evals=false&opening=false&literate=false`, {
@@ -282,7 +285,8 @@ function carregarPartida(gameId) {
     } else {
       alert("Erro ao carregar posição");
     }
-  });
+  })
+  .catch(() => alert("Erro ao carregar partida"));
 
 }
 
