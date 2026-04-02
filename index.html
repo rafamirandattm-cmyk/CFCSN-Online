@@ -68,20 +68,8 @@
 
 <script>
 
-const proxy = "https://api.allorigins.win/raw?url=";
-
-// TIMEOUT (evita travar)
-function fetchComTimeout(url, tempo = 8000){
-  return Promise.race([
-    fetch(url),
-    new Promise((_, reject) =>
-      setTimeout(() => reject("timeout"), tempo)
-    )
-  ]);
-}
-
 // TORNEIO
-fetchComTimeout(proxy + "https://lichess.org/api/swiss/qMebYahN")
+fetch("https://lichess.org/api/swiss/qMebYahN")
 .then(r => r.json())
 .then(d => {
   document.getElementById("torneio").innerHTML = `
@@ -96,7 +84,9 @@ fetchComTimeout(proxy + "https://lichess.org/api/swiss/qMebYahN")
 });
 
 // RANKING
-fetchComTimeout(proxy + "https://lichess.org/api/swiss/qMebYahN/results")
+fetch("https://lichess.org/api/swiss/qMebYahN/results", {
+  headers: { "Accept": "application/x-ndjson" }
+})
 .then(r => r.text())
 .then(t => {
   let html="";
@@ -118,8 +108,10 @@ fetchComTimeout(proxy + "https://lichess.org/api/swiss/qMebYahN/results")
   document.getElementById("ranking").innerHTML = "<tr><td colspan='3'>Erro</td></tr>";
 });
 
-// RODADAS (ANTI-TRAVAMENTO)
-fetchComTimeout(proxy + "https://lichess.org/api/swiss/qMebYahN/games")
+// RODADAS
+fetch("https://lichess.org/api/swiss/qMebYahN/games", {
+  headers: { "Accept": "application/x-ndjson" }
+})
 .then(r => r.text())
 .then(t => {
 
