@@ -21,16 +21,8 @@
       margin-bottom:15px;
     }
 
-    table {
-      width:100%;
-      border-collapse: collapse;
-    }
-
-    th, td {
-      padding:10px;
-      text-align:center;
-    }
-
+    table { width:100%; border-collapse: collapse; }
+    th, td { padding:10px; text-align:center; }
     th { background:#334155; }
 
     .gold { color:gold; font-weight:bold; }
@@ -49,7 +41,6 @@
       text-align:left;
       padding:10px;
       font-size:16px;
-      cursor:pointer;
     }
 
     .win { color:#22c55e; }
@@ -67,9 +58,7 @@
 <h2>🏆 Ranking</h2>
 <div class="card">
 <table>
-<thead>
 <tr><th>#</th><th>Jogador</th><th>Pontos</th></tr>
-</thead>
 <tbody id="ranking"></tbody>
 </table>
 </div>
@@ -81,8 +70,18 @@
 
 const proxy = "https://api.allorigins.win/raw?url=";
 
+// TIMEOUT (evita travar)
+function fetchComTimeout(url, tempo = 8000){
+  return Promise.race([
+    fetch(url),
+    new Promise((_, reject) =>
+      setTimeout(() => reject("timeout"), tempo)
+    )
+  ]);
+}
+
 // TORNEIO
-fetch(proxy + "https://lichess.org/api/swiss/qMebYahN")
+fetchComTimeout(proxy + "https://lichess.org/api/swiss/qMebYahN")
 .then(r => r.json())
 .then(d => {
   document.getElementById("torneio").innerHTML = `
@@ -91,10 +90,13 @@ fetch(proxy + "https://lichess.org/api/swiss/qMebYahN")
     <p>Jogadores: ${d.nbPlayers}</p>
     <p>Rodadas: ${d.nbRounds}</p>
   `;
+})
+.catch(() => {
+  document.getElementById("torneio").innerText = "Erro ao carregar";
 });
 
 // RANKING
-fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/results")
+fetchComTimeout(proxy + "https://lichess.org/api/swiss/qMebYahN/results")
 .then(r => r.text())
 .then(t => {
   let html="";
@@ -111,10 +113,13 @@ fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/results")
     `;
   });
   document.getElementById("ranking").innerHTML=html;
+})
+.catch(() => {
+  document.getElementById("ranking").innerHTML = "<tr><td colspan='3'>Erro</td></tr>";
 });
 
-// RODADAS
-fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/games")
+// RODADAS (ANTI-TRAVAMENTO)
+fetchComTimeout(proxy + "https://lichess.org/api/swiss/qMebYahN/games")
 .then(r => r.text())
 .then(t => {
 
@@ -144,7 +149,7 @@ fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/games")
       let link = "https://lichess.org/" + g.id;
 
       html+=`
-        <button class="${c}" onclick="abrirJogo('${link}')">
+        <button class="${c}" onclick="window.location.href='${link}'">
           ${w} ${r} ${b}
         </button>
       `;
@@ -156,12 +161,10 @@ fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/games")
 
   document.getElementById("rodadas").innerHTML=html;
 
+})
+.catch(() => {
+  document.getElementById("rodadas").innerText = "Erro ao carregar rodadas";
 });
-
-// ABRIR JOGO
-function abrirJogo(link){
-  window.open(link, "_blank");
-}
 
 </script>
 
