@@ -81,8 +81,8 @@ fetch("https://lichess.org/api/swiss/qMebYahN/games", {
       grupos[r].forEach(j => {
         html += `
           <p>
-            ${j.players.white.user.name} vs 
-            ${j.players.black.user.name}
+${j.players.white?.user?.name || "BYE"} vs 
+${j.players.black?.user?.name || "BYE"}
           </p>
         `;
       });
