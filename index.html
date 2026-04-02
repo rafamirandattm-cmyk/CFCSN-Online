@@ -10,6 +10,8 @@
 <div id="torneio">Carregando...</div>
 
 <h2>Ranking</h2>
+  <h2>Rodadas</h2>
+<div id="rodadas"></div>
 <table border="1">
   <tr>
     <th>#</th>
@@ -22,6 +24,44 @@
 <script>
 // TORNEIO
 fetch("https://lichess.org/api/swiss/qMebYahN")
+  <script>
+fetch("https://lichess.org/api/swiss/qMebYahN/games")
+  .then(res => res.text())
+  .then(text => {
+    const linhas = text.trim().split("\n");
+
+    let rodadas = {};
+
+    linhas.forEach(linha => {
+      const jogo = JSON.parse(linha);
+
+      const r = jogo.round;
+
+      if (!rodadas[r]) {
+        rodadas[r] = [];
+      }
+
+      rodadas[r].push(jogo);
+    });
+
+    let html = "";
+
+    for (let r in rodadas) {
+      html += `<h3>Rodada ${r}</h3>`;
+
+      rodadas[r].forEach(jogo => {
+        html += `
+          <p>
+            ${jogo.players.white.user.name} vs 
+            ${jogo.players.black.user.name}
+          </p>
+        `;
+      });
+    }
+
+    document.getElementById("rodadas").innerHTML = html;
+  });
+</script>
   .then(res => res.text())
   .then(text => {
     const data = JSON.parse(text);
