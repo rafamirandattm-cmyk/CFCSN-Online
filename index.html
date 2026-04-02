@@ -135,13 +135,14 @@ fetch("https://lichess.org/api/swiss/qMebYahN/results", {
   document.getElementById("ranking").innerHTML = html;
 });
 
-// ================= RODADAS =================
+// ================= RODADAS (REAL) =================
 fetch("https://lichess.org/api/swiss/qMebYahN/games", {
   headers: { "Accept": "application/x-ndjson" }
 })
 .then(r => r.text())
 .then(t => {
   const linhas = t.trim().split("\n");
+
   let rodadas = {};
 
   linhas.forEach(l => {
@@ -149,7 +150,11 @@ fetch("https://lichess.org/api/swiss/qMebYahN/games", {
 
     const j = JSON.parse(l);
 
+    // IGNORA se não tiver rodada
+    if (!j.round) return;
+
     const round = j.round;
+
     const white = j.players.white?.user?.name || "BYE";
     const black = j.players.black?.user?.name || "BYE";
 
