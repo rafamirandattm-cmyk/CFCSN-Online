@@ -4,6 +4,10 @@
   <title>CFCSN</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- Chessboard -->
+  <link rel="stylesheet" href="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard.min.css">
+  <script src="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard.min.js"></script>
+
   <style>
     body {
       background: #0f172a;
@@ -47,9 +51,7 @@
       background:#1e293b;
     }
 
-    .medalha {
-      font-size:18px;
-    }
+    .medalha { font-size:18px; }
 
     .rodada {
       background:#1e293b;
@@ -65,6 +67,7 @@
       text-align:left;
       padding:10px;
       font-size:16px;
+      cursor:pointer;
     }
 
     .win { color:#22c55e; }
@@ -77,8 +80,13 @@
 
 <h1>♟️ CFCSN Torneios Online</h1>
 
-<div id="torneio" class="card">Carregando...</div>
+<!-- TABULEIRO -->
+<h2>♟️ Tabuleiro</h2>
+<div class="card">
+  <div id="board" style="width:100%; max-width:400px; margin:auto;"></div>
+</div>
 
+<div id="torneio" class="card">Carregando...</div>
 <div id="campeao"></div>
 
 <h2>🏆 Ranking</h2>
@@ -101,6 +109,11 @@
 
 <script>
 
+// INICIA TABULEIRO
+var board = Chessboard('board', {
+  position: 'start'
+});
+
 // TORNEIO
 fetch("https://lichess.org/api/swiss/qMebYahN")
 .then(r => r.json())
@@ -113,7 +126,7 @@ fetch("https://lichess.org/api/swiss/qMebYahN")
   `;
 });
 
-// RANKING COMPLETO (RESULTADOS REAIS)
+// RANKING
 Promise.all([
   fetch("https://lichess.org/api/swiss/qMebYahN/results", {
     headers: { "Accept": "application/x-ndjson" }
@@ -128,7 +141,6 @@ Promise.all([
   let jogadores = {};
   let campeao = "";
 
-  // base jogadores
   resultsText.split("\n").forEach(l => {
     if (!l) return;
     let j = JSON.parse(l);
@@ -143,7 +155,6 @@ Promise.all([
     };
   });
 
-  // jogos
   gamesText.split("\n").forEach(l => {
     if (!l) return;
     let g = JSON.parse(l);
@@ -151,18 +162,13 @@ Promise.all([
     let white = g.players.white?.user?.name;
     let black = g.players.black?.user?.name;
 
-    // BYE
     if (!black || black === "BYE") {
-      if (white && jogadores[white]) {
-        jogadores[white].score.push("1B");
-      }
+      jogadores[white]?.score.push("1B");
       return;
     }
 
     if (!white || white === "BYE") {
-      if (black && jogadores[black]) {
-        jogadores[black].score.push("1B");
-      }
+      jogadores[black]?.score.push("1B");
       return;
     }
 
@@ -175,13 +181,9 @@ Promise.all([
     } else if (g.winner === "black") {
       jogadores[white]?.score.push("0");
       jogadores[black]?.score.push("1");
-    } else {
-      jogadores[white]?.score.push("½");
-      jogadores[black]?.score.push("½");
     }
   });
 
-  // tabela
   let html = "";
 
   Object.values(jogadores)
@@ -222,7 +224,7 @@ Promise.all([
 
 });
 
-// RODADAS
+// RODADAS + CLICK NO TABULEIRO
 fetch("https://lichess.org/api/swiss/qMebYahN/games", {
   headers: { "Accept": "application/x-ndjson" }
 })
@@ -252,10 +254,8 @@ fetch("https://lichess.org/api/swiss/qMebYahN/games", {
       else if(g.winner==="white"){r="1 x 0";c="win";}
       else if(g.winner==="black"){r="0 x 1";c="loss";}
 
-      let link = "https://lichess.org/" + g.id;
-
       html+=`
-        <button class="${c}" onclick="window.location.href='${link}'">
+        <button class="${c}" onclick="carregarPartida('${g.id}')">
           ${w} ${r} ${b}
         </button>
       `;
@@ -268,6 +268,23 @@ fetch("https://lichess.org/api/swiss/qMebYahN/games", {
   document.getElementById("rodadas").innerHTML=html;
 
 });
+
+// CARREGAR PARTIDA NO TABULEIRO
+function carregarPartida(gameId) {
+
+  fetch(`https://lichess.org/game/export/${gameId}?moves=false&tags=false&clocks=false&evals=false&opening=false&literate=false`, {
+    headers: { "Accept": "application/json" }
+  })
+  .then(r => r.json())
+  .then(game => {
+    if(game.fen){
+      board.position(game.fen);
+    } else {
+      alert("Erro ao carregar posição");
+    }
+  });
+
+}
 
 </script>
 
