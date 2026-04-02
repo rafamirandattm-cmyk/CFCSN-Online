@@ -59,8 +59,11 @@ fetch("https://lichess.org/api/swiss/qMebYahN/results")
   });
 
 // RODADAS (AGRUPADAS)
-fetch("https://lichess.org/api/swiss/qMebYahN/games")
-  .then(r => r.text())
+fetch("https://lichess.org/api/swiss/qMebYahN/games", {
+  headers: {
+    "Accept": "application/x-ndjson"
+  }
+})  .then(r => r.text())
   .then(t => {
     const linhas = t.trim().split("\n");
     const grupos = {};
