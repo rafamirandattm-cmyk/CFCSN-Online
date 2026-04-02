@@ -90,9 +90,7 @@
   <th>Pts</th>
   <th>TB</th>
   <th>Perf</th>
-  <th>V</th>
-  <th>E</th>
-  <th>D</th>
+  <th colspan="3">Resultados</th>
 </tr>
 <tbody id="ranking"></tbody>
 </table>
@@ -115,46 +113,112 @@ fetch("https://lichess.org/api/swiss/qMebYahN")
   `;
 });
 
-// RANKING PROFISSIONAL
-fetch("https://lichess.org/api/swiss/qMebYahN/results", {
-  headers: { "Accept": "application/x-ndjson" }
-})
-.then(r => r.text())
-.then(t => {
+// RANKING COMPLETO (RESULTADOS REAIS)
+Promise.all([
+  fetch("https://lichess.org/api/swiss/qMebYahN/results", {
+    headers: { "Accept": "application/x-ndjson" }
+  }).then(r => r.text()),
 
-  let html="";
-  let campeao="";
+  fetch("https://lichess.org/api/swiss/qMebYahN/games", {
+    headers: { "Accept": "application/x-ndjson" }
+  }).then(r => r.text())
 
-  t.split("\n").forEach(l=>{
-    if(!l) return;
-    let j=JSON.parse(l);
+]).then(([resultsText, gamesText]) => {
 
-    let medalha = j.rank==1?"🥇":j.rank==2?"🥈":j.rank==3?"🥉":j.rank;
+  let jogadores = {};
+  let campeao = "";
 
-    if(j.rank==1){
-      campeao = `
-        <div class="card campeao">
-          🏆 Campeão: ${j.username} (${j.points} pts)
-        </div>
-      `;
-    }
+  // base jogadores
+  resultsText.split("\n").forEach(l => {
+    if (!l) return;
+    let j = JSON.parse(l);
 
-    html+=`
-      <tr>
-        <td class="medalha">${medalha}</td>
-        <td>${j.username}</td>
-        <td>${j.points}</td>
-        <td>${j.tieBreak || "-"}</td>
-        <td>${j.performance || "-"}</td>
-        <td>${j.nbWins || 0}</td>
-        <td>${j.nbDraws || 0}</td>
-        <td>${j.nbLosses || 0}</td>
-      </tr>
-    `;
+    jogadores[j.username] = {
+      rank: j.rank,
+      username: j.username,
+      points: j.points,
+      tieBreak: j.tieBreak,
+      performance: j.performance,
+      score: []
+    };
   });
 
-  document.getElementById("ranking").innerHTML=html;
-  document.getElementById("campeao").innerHTML=campeao;
+  // jogos
+  gamesText.split("\n").forEach(l => {
+    if (!l) return;
+    let g = JSON.parse(l);
+
+    let white = g.players.white?.user?.name;
+    let black = g.players.black?.user?.name;
+
+    // BYE
+    if (!black || black === "BYE") {
+      if (white && jogadores[white]) {
+        jogadores[white].score.push("1B");
+      }
+      return;
+    }
+
+    if (!white || white === "BYE") {
+      if (black && jogadores[black]) {
+        jogadores[black].score.push("1B");
+      }
+      return;
+    }
+
+    if (g.status === "draw") {
+      jogadores[white]?.score.push("½");
+      jogadores[black]?.score.push("½");
+    } else if (g.winner === "white") {
+      jogadores[white]?.score.push("1");
+      jogadores[black]?.score.push("0");
+    } else if (g.winner === "black") {
+      jogadores[white]?.score.push("0");
+      jogadores[black]?.score.push("1");
+    } else {
+      jogadores[white]?.score.push("½");
+      jogadores[black]?.score.push("½");
+    }
+  });
+
+  // tabela
+  let html = "";
+
+  Object.values(jogadores)
+    .sort((a,b)=>a.rank-b.rank)
+    .forEach(j => {
+
+      let medalha = j.rank==1?"🥇":j.rank==2?"🥈":j.rank==3?"🥉":j.rank;
+
+      if(j.rank==1){
+        campeao = `
+          <div class="card campeao">
+            🏆 Campeão: ${j.username} (${j.points} pts)
+          </div>
+        `;
+      }
+
+      let scoreVisual = j.score.map(s=>{
+        if(s==="1B") return `<span style="color:gray">1</span>`;
+        if(s==="1") return `<span style="color:#22c55e">1</span>`;
+        if(s==="0") return `<span style="color:#ef4444">0</span>`;
+        return `<span style="color:#eab308">½</span>`;
+      }).join(" ");
+
+      html += `
+        <tr>
+          <td class="medalha">${medalha}</td>
+          <td>${j.username}</td>
+          <td>${j.points}</td>
+          <td>${j.tieBreak || "-"}</td>
+          <td>${j.performance || "-"}</td>
+          <td colspan="3">${scoreVisual}</td>
+        </tr>
+      `;
+    });
+
+  document.getElementById("ranking").innerHTML = html;
+  document.getElementById("campeao").innerHTML = campeao;
 
 });
 
