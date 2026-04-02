@@ -66,27 +66,19 @@ fetch("https://lichess.org/api/swiss/qMebYahN/games", {
 })  .then(r => r.text())
   .then(t => {
     const linhas = t.trim().split("\n");
-    const grupos = {};
 
-    linhas.forEach(l => {
-      const j = JSON.parse(l);
-      if (!grupos[j.round]) grupos[j.round] = [];
-      grupos[j.round].push(j);
-    });
+    let html = "";let html = "";
 
-    let html = "";
+linhas.forEach(l => {
+  const j = JSON.parse(l);
 
-    Object.keys(grupos).sort((a,b)=>a-b).forEach(r => {
-      html += `<h3>Rodada ${r}</h3>`;
-      grupos[r].forEach(j => {
-        html += `
-          <p>
-${j.players.white?.user?.name || "BYE"} vs 
-${j.players.black?.user?.name || "BYE"}
-          </p>
-        `;
-      });
-    });
+  const white = j.players.white?.user?.name || "BYE";
+  const black = j.players.black?.user?.name || "BYE";
+
+  html += `<p>${white} vs ${black}</p>`;
+});
+
+document.getElementById("rodadas").innerHTML = html;
 
     document.getElementById("rodadas").innerHTML = html;
   });
