@@ -21,6 +21,27 @@
   <tbody id="ranking"></tbody>
 </table>
 
+  fetch("https://lichess.org/api/swiss/qMebYahN/games")
+  .then(res => res.text())
+  .then(text => {
+    const linhas = text.trim().split("\n");
+
+    let html = "";
+
+    linhas.forEach(linha => {
+      const jogo = JSON.parse(linha);
+
+      html += `
+        <p>
+          Rodada ${jogo.round}: 
+          ${jogo.players.white.user.name} vs 
+          ${jogo.players.black.user.name}
+        </p>
+      `;
+    });
+
+    document.getElementById("rodadas").innerHTML = html;
+  });
 <script>
 // TORNEIO
 fetch("https://lichess.org/api/swiss/qMebYahN")
