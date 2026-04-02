@@ -24,28 +24,35 @@
 
 <script>
 
-// TORNEIO
-fetch("https://lichess.org/api/swiss/qMebYahN")
-  .then(r => r.text())
-  .then(t => {
-    const d = JSON.parse(t);
+const proxy = "https://corsproxy.io/?";
+
+// ================= TORNEIO =================
+fetch(proxy + "https://lichess.org/api/swiss/qMebYahN")
+  .then(r => r.json())
+  .then(d => {
     document.getElementById("torneio").innerHTML = `
       <h2>${d.name}</h2>
       <p>Status: ${d.status}</p>
       <p>Jogadores: ${d.nbPlayers}</p>
       <p>Rodadas: ${d.nbRounds}</p>
     `;
+  })
+  .catch(() => {
+    document.getElementById("torneio").innerText = "Erro ao carregar torneio";
   });
 
-// RANKING
-fetch("https://lichess.org/api/swiss/qMebYahN/results")
+// ================= RANKING =================
+fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/results")
   .then(r => r.text())
   .then(t => {
     const linhas = t.trim().split("\n");
     let html = "";
 
     linhas.forEach(l => {
+      if (!l) return;
+
       const j = JSON.parse(l);
+
       html += `
         <tr>
           <td>${j.rank}</td>
@@ -56,31 +63,33 @@ fetch("https://lichess.org/api/swiss/qMebYahN/results")
     });
 
     document.getElementById("ranking").innerHTML = html;
+  })
+  .catch(() => {
+    document.getElementById("ranking").innerHTML = "<tr><td colspan='3'>Erro ao carregar</td></tr>";
   });
 
-// RODADAS (AGRUPADAS)
-fetch("https://lichess.org/api/swiss/qMebYahN/games", {
-  headers: {
-    "Accept": "application/x-ndjson"
-  }
-})  .then(r => r.text())
+// ================= RODADAS =================
+fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/games")
+  .then(r => r.text())
   .then(t => {
     const linhas = t.trim().split("\n");
+    let html = "";
 
-    let html = "";let html = "";
+    linhas.forEach(l => {
+      if (!l) return;
 
-linhas.forEach(l => {
-  const j = JSON.parse(l);
+      const j = JSON.parse(l);
 
-  const white = j.players.white?.user?.name || "BYE";
-  const black = j.players.black?.user?.name || "BYE";
+      const white = j.players.white?.user?.name || "BYE";
+      const black = j.players.black?.user?.name || "BYE";
 
-  html += `<p>${white} vs ${black}</p>`;
-});
-
-document.getElementById("rodadas").innerHTML = html;
+      html += `<p>${white} vs ${black}</p>`;
+    });
 
     document.getElementById("rodadas").innerHTML = html;
+  })
+  .catch(() => {
+    document.getElementById("rodadas").innerText = "Erro ao carregar rodadas";
   });
 
 </script>
