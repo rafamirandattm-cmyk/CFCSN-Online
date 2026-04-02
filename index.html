@@ -42,6 +42,16 @@
       margin-bottom:10px;
     }
 
+    button {
+      width:100%;
+      background:none;
+      border:none;
+      text-align:left;
+      padding:10px;
+      font-size:16px;
+      cursor:pointer;
+    }
+
     .win { color:#22c55e; }
     .loss { color:#ef4444; }
     .draw { color:#eab308; }
@@ -77,7 +87,7 @@
 
 const proxy = "https://api.allorigins.win/raw?url=";
 
-// ================= TORNEIO =================
+// TORNEIO
 fetch(proxy + "https://lichess.org/api/swiss/qMebYahN")
 .then(r => r.json())
 .then(d => {
@@ -89,7 +99,7 @@ fetch(proxy + "https://lichess.org/api/swiss/qMebYahN")
   `;
 });
 
-// ================= RANKING =================
+// RANKING
 fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/results")
 .then(r => r.text())
 .then(t => {
@@ -109,7 +119,7 @@ fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/results")
   document.getElementById("ranking").innerHTML=html;
 });
 
-// ================= RODADAS + VISUAL =================
+// RODADAS COM BOTÃO (FUNCIONA NO CELULAR)
 fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/games")
 .then(r => r.text())
 .then(t => {
@@ -140,14 +150,9 @@ fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/games")
       let link = "https://lichess.org/embed/" + g.id;
 
       html+=`
-        html+=`
-  <button class="${c}" onclick="abrirJogo('${link}')"
-  style="width:100%;background:none;border:none;text-align:left;padding:8px;font-size:16px;">
-    ${w} ${r} ${b}
-  </button>
-`;
+        <button class="${c}" onclick="abrirJogo('${link}')">
           ${w} ${r} ${b}
-        </p>
+        </button>
       `;
     }
 
@@ -159,7 +164,7 @@ fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/games")
 
 });
 
-// ================= FUNÇÃO VISUALIZADOR =================
+// FUNÇÃO
 function abrirJogo(link){
   document.getElementById("viewer").style.display="block";
   document.getElementById("frameJogo").src = link;
@@ -168,161 +173,6 @@ function abrirJogo(link){
     behavior: "smooth"
   });
 }
-
-</script>
-
-</body>
-</html>      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
-    th, td {
-      padding: 10px;
-      text-align: center;
-    }
-
-    th {
-      background: #334155;
-    }
-
-    tr:nth-child(even) {
-      background: #1e293b;
-    }
-
-    .gold {
-      color: gold;
-      font-weight: bold;
-    }
-
-    .win { color: #22c55e; }
-    .loss { color: #ef4444; }
-    .draw { color: #eab308; }
-
-    .rodada {
-      background: #1e293b;
-      padding: 10px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-    }
-  </style>
-</head>
-
-<body>
-
-<h1>♟️ CFCSN - Torneios</h1>
-
-<div id="torneio" class="card">Carregando...</div>
-
-<h2>🏆 Ranking</h2>
-<div class="card">
-  <table>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Jogador</th>
-        <th>Pontos</th>
-      </tr>
-    </thead>
-    <tbody id="ranking"></tbody>
-  </table>
-</div>
-
-<h2>📋 Rodadas</h2>
-<div id="rodadas"></div>
-
-<script>
-
-// ================= TORNEIO =================
-fetch("https://lichess.org/api/swiss/qMebYahN", {
-  headers: { "Accept": "application/json" }
-})
-.then(r => r.json())
-.then(d => {
-  document.getElementById("torneio").innerHTML = `
-    <h2>${d.name}</h2>
-    <p>Status: ${d.status}</p>
-    <p>Jogadores: ${d.nbPlayers}</p>
-    <p>Rodadas: ${d.nbRounds}</p>
-  `;
-});
-
-// ================= RANKING =================
-fetch("https://lichess.org/api/swiss/qMebYahN/results", {
-  headers: { "Accept": "application/x-ndjson" }
-})
-.then(r => r.text())
-.then(t => {
-  const linhas = t.trim().split("\n");
-  let html = "";
-
-  linhas.forEach(l => {
-    if (!l) return;
-    const j = JSON.parse(l);
-
-    let classe = j.rank == 1 ? "gold" : "";
-
-    html += `
-      <tr class="${classe}">
-        <td>${j.rank}</td>
-        <td>${j.username}</td>
-        <td>${j.points}</td>
-      </tr>
-    `;
-  });
-
-  document.getElementById("ranking").innerHTML = html;
-});
-
-// ================= RODADAS =================
-fetch("https://lichess.org/api/swiss/qMebYahN/games", {
-  headers: { "Accept": "application/x-ndjson" }
-})
-.then(r => r.text())
-.then(t => {
-  const linhas = t.trim().split("\n").filter(l => l);
-
-  let html = "";
-  let rodada = 1;
-
-  const jogadores = 5;
-  const jogosPorRodada = Math.floor(jogadores / 2); // 2 jogos
-
-  for (let i = 0; i < linhas.length; i += jogosPorRodada) {
-
-    html += `<div class="rodada"><h3>Rodada ${rodada}</h3>`;
-
-    for (let j = 0; j < jogosPorRodada; j++) {
-      const linha = linhas[i + j];
-      if (!linha) continue;
-
-      const game = JSON.parse(linha);
-
-      const white = game.players.white?.user?.name || "BYE";
-      const black = game.players.black?.user?.name || "BYE";
-
-      let resultado = "-";
-      let classe = "";
-
-      if (game.status === "draw") {
-        resultado = "½ x ½";
-        classe = "draw";
-      } else if (game.winner === "white") {
-        resultado = "1 x 0";
-        classe = "win";
-      } else if (game.winner === "black") {
-        resultado = "0 x 1";
-        classe = "loss";
-      }
-
-      html += `<p class="${classe}">${white} ${resultado} ${black}</p>`;
-    }
-
-    html += `</div>`;
-    rodada++;
-  }
-
-  document.getElementById("rodadas").innerHTML = html;
-});
 
 </script>
 
