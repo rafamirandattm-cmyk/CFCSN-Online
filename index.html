@@ -140,7 +140,12 @@ fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/games")
       let link = "https://lichess.org/embed/" + g.id;
 
       html+=`
-        <p class="${c}" style="cursor:pointer;" onclick="abrirJogo('${link}')">
+        html+=`
+  <button class="${c}" onclick="abrirJogo('${link}')"
+  style="width:100%;background:none;border:none;text-align:left;padding:8px;font-size:16px;">
+    ${w} ${r} ${b}
+  </button>
+`;
           ${w} ${r} ${b}
         </p>
       `;
