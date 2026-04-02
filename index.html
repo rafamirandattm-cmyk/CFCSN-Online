@@ -9,7 +9,18 @@
 
 <div id="torneio">Carregando...</div>
 
+<h2>Ranking</h2>
+<table border="1">
+  <tr>
+    <th>#</th>
+    <th>Jogador</th>
+    <th>Pontos</th>
+  </tr>
+  <tbody id="ranking"></tbody>
+</table>
+
 <script>
+// TORNEIO
 fetch("https://lichess.org/api/swiss/qMebYahN")
   .then(res => res.text())
   .then(text => {
@@ -21,6 +32,34 @@ fetch("https://lichess.org/api/swiss/qMebYahN")
       <p>Jogadores: ${data.nbPlayers}</p>
       <p>Rodadas: ${data.nbRounds}</p>
     `;
+  });
+
+// RANKING
+fetch("https://lichess.org/api/swiss/qMebYahN/results")
+  .then(res => res.text())
+  .then(text => {
+    const linhas = text.trim().split("\n");
+
+    let html = "";
+
+    linhas.forEach((linha) => {
+      const jogador = JSON.parse(linha);
+
+      html += `
+        <tr>
+          <td>${jogador.rank}</td>
+          <td>${jogador.username}</td>
+          <td>${jogador.points}</td>
+        </tr>
+      `;
+    });
+
+    document.getElementById("ranking").innerHTML = html;
+  });
+</script>
+
+</body>
+</html>
   });
 </script>
 
