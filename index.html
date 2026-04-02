@@ -20,40 +20,37 @@
 </table>
 
 <h2>Rodadas</h2>
-<div id="rodadas"></div>
+<div id="rodadas">Carregando rodadas...</div>
 
 <script>
 
 // TORNEIO
 fetch("https://lichess.org/api/swiss/qMebYahN")
-  .then(res => res.text())
-  .then(text => {
-    const data = JSON.parse(text);
-
+  .then(r => r.text())
+  .then(t => {
+    const d = JSON.parse(t);
     document.getElementById("torneio").innerHTML = `
-      <h2>${data.name}</h2>
-      <p>Status: ${data.status}</p>
-      <p>Jogadores: ${data.nbPlayers}</p>
-      <p>Rodadas: ${data.nbRounds}</p>
+      <h2>${d.name}</h2>
+      <p>Status: ${d.status}</p>
+      <p>Jogadores: ${d.nbPlayers}</p>
+      <p>Rodadas: ${d.nbRounds}</p>
     `;
   });
 
 // RANKING
 fetch("https://lichess.org/api/swiss/qMebYahN/results")
-  .then(res => res.text())
-  .then(text => {
-    const linhas = text.trim().split("\n");
-
+  .then(r => r.text())
+  .then(t => {
+    const linhas = t.trim().split("\n");
     let html = "";
 
-    linhas.forEach((linha) => {
-      const jogador = JSON.parse(linha);
-
+    linhas.forEach(l => {
+      const j = JSON.parse(l);
       html += `
         <tr>
-          <td>${jogador.rank}</td>
-          <td>${jogador.username}</td>
-          <td>${jogador.points}</td>
+          <td>${j.rank}</td>
+          <td>${j.username}</td>
+          <td>${j.points}</td>
         </tr>
       `;
     });
@@ -61,39 +58,32 @@ fetch("https://lichess.org/api/swiss/qMebYahN/results")
     document.getElementById("ranking").innerHTML = html;
   });
 
-// RODADAS
+// RODADAS (AGRUPADAS)
 fetch("https://lichess.org/api/swiss/qMebYahN/games")
-  .then(res => res.text())
-  .then(text => {
-    const linhas = text.trim().split("\n");
+  .then(r => r.text())
+  .then(t => {
+    const linhas = t.trim().split("\n");
+    const grupos = {};
 
-    let rodadas = {};
-
-    linhas.forEach(linha => {
-      const jogo = JSON.parse(linha);
-      const r = jogo.round;
-
-      if (!rodadas[r]) {
-        rodadas[r] = [];
-      }
-
-      rodadas[r].push(jogo);
+    linhas.forEach(l => {
+      const j = JSON.parse(l);
+      if (!grupos[j.round]) grupos[j.round] = [];
+      grupos[j.round].push(j);
     });
 
     let html = "";
 
-    for (let r in rodadas) {
+    Object.keys(grupos).sort((a,b)=>a-b).forEach(r => {
       html += `<h3>Rodada ${r}</h3>`;
-
-      rodadas[r].forEach(jogo => {
+      grupos[r].forEach(j => {
         html += `
           <p>
-            ${jogo.players.white.user.name} vs 
-            ${jogo.players.black.user.name}
+            ${j.players.white.user.name} vs 
+            ${j.players.black.user.name}
           </p>
         `;
       });
-    }
+    });
 
     document.getElementById("rodadas").innerHTML = html;
   });
