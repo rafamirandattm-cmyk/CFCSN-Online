@@ -4,13 +4,6 @@
   <title>CFCSN</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- jQuery -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-  <!-- Chessboard -->
-  <link rel="stylesheet" href="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard.min.css">
-  <script src="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard.min.js"></script>
-
   <style>
     body { background:#0f172a; color:#e2e8f0; font-family:Arial; padding:10px;}
     h1 { text-align:center; color:#38bdf8;}
@@ -18,6 +11,16 @@
     table { width:100%; border-collapse:collapse;}
     th, td { padding:8px; text-align:center;}
     th { background:#334155;}
+    button {
+      width:100%;
+      background:#1e293b;
+      border:none;
+      padding:10px;
+      margin:5px 0;
+      color:white;
+      cursor:pointer;
+      border-radius:8px;
+    }
   </style>
 </head>
 
@@ -25,8 +28,14 @@
 
 <h1>♟️ CFCSN</h1>
 
+<!-- TABULEIRO REAL -->
 <div class="card">
-  <div id="board" style="max-width:400px;margin:auto;"></div>
+  <iframe id="tabuleiro"
+    src="https://lichess.org/embed/game/undefined"
+    width="100%"
+    height="400"
+    frameborder="0">
+  </iframe>
 </div>
 
 <div id="torneio" class="card">Carregando...</div>
@@ -39,15 +48,13 @@
 </table>
 </div>
 
+<h2>📋 Jogos</h2>
+<div id="jogos" class="card">Carregando...</div>
+
 <script>
 
-const proxy = "https://api.allorigins.win/raw?url=";
-
-// tabuleiro
-var board = Chessboard('board', { position: 'start' });
-
-// TORNEIO
-fetch(proxy + "https://lichess.org/api/swiss/qMebYahN")
+// TORNEIO (funciona direto)
+fetch("https://lichess.org/api/swiss/qMebYahN")
 .then(r=>r.json())
 .then(d=>{
   document.getElementById("torneio").innerHTML =
@@ -55,29 +62,50 @@ fetch(proxy + "https://lichess.org/api/swiss/qMebYahN")
      <p>Jogadores: ${d.nbPlayers}</p>`;
 });
 
-// RANKING (FUNCIONA)
-fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/results")
+// RANKING (NDJSON funciona direto)
+fetch("https://lichess.org/api/swiss/qMebYahN/results", {
+  headers: { "Accept": "application/x-ndjson" }
+})
 .then(r=>r.text())
 .then(t=>{
-
   let html="";
-
   t.split("\n").forEach(l=>{
     if(!l) return;
     let j=JSON.parse(l);
+    html+=`<tr><td>${j.rank}</td><td>${j.username}</td><td>${j.points}</td></tr>`;
+  });
+  document.getElementById("ranking").innerHTML=html;
+});
+
+// JOGOS (SEM PROXY, só lista básica)
+fetch("https://lichess.org/api/swiss/qMebYahN/games", {
+  headers: { "Accept": "application/x-ndjson" }
+})
+.then(r=>r.text())
+.then(t=>{
+  let html="";
+  t.split("\n").forEach(l=>{
+    if(!l) return;
+    let g=JSON.parse(l);
+
+    let w=g.players.white?.user?.name||"BYE";
+    let b=g.players.black?.user?.name||"BYE";
 
     html+=`
-      <tr>
-        <td>${j.rank}</td>
-        <td>${j.username}</td>
-        <td>${j.points}</td>
-      </tr>
+      <button onclick="abrirPartida('${g.id}')">
+        ${w} vs ${b}
+      </button>
     `;
   });
 
-  document.getElementById("ranking").innerHTML=html;
-
+  document.getElementById("jogos").innerHTML=html;
 });
+
+// TROCAR TABULEIRO
+function abrirPartida(id){
+  document.getElementById("tabuleiro").src =
+    "https://lichess.org/embed/game/" + id;
+}
 
 </script>
 
