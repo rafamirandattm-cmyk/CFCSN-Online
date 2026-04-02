@@ -8,33 +8,166 @@
     body {
       background: #0f172a;
       color: #e2e8f0;
-      font-family: Arial, sans-serif;
-      margin: 0;
+      font-family: Arial;
       padding: 10px;
     }
 
-    h1 {
-      text-align: center;
-      color: #38bdf8;
-    }
-
-    h2 {
-      margin-top: 30px;
-      border-bottom: 2px solid #334155;
-      padding-bottom: 5px;
-    }
+    h1 { text-align: center; color: #38bdf8; }
 
     .card {
-      background: #1e293b;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 15px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      background:#1e293b;
+      padding:15px;
+      border-radius:10px;
+      margin-bottom:15px;
     }
 
     table {
-      width: 100%;
+      width:100%;
       border-collapse: collapse;
+    }
+
+    th, td {
+      padding:10px;
+      text-align:center;
+    }
+
+    th { background:#334155; }
+
+    .gold { color:gold; font-weight:bold; }
+
+    .rodada {
+      background:#1e293b;
+      padding:10px;
+      border-radius:10px;
+      margin-bottom:10px;
+    }
+
+    .win { color:#22c55e; }
+    .loss { color:#ef4444; }
+    .draw { color:#eab308; }
+  </style>
+</head>
+
+<body>
+
+<h1>♟️ CFCSN - Torneios</h1>
+
+<div id="torneio" class="card">Carregando...</div>
+
+<h2>🏆 Ranking</h2>
+<div class="card">
+<table>
+<thead>
+<tr><th>#</th><th>Jogador</th><th>Pontos</th></tr>
+</thead>
+<tbody id="ranking"></tbody>
+</table>
+</div>
+
+<h2>📋 Rodadas</h2>
+<div id="rodadas">Carregando...</div>
+
+<!-- VISUALIZADOR -->
+<div id="viewer" class="card" style="display:none;">
+  <h2>♟️ Partida</h2>
+  <iframe id="frameJogo" width="100%" height="500" style="border:none;"></iframe>
+</div>
+
+<script>
+
+const proxy = "https://api.allorigins.win/raw?url=";
+
+// ================= TORNEIO =================
+fetch(proxy + "https://lichess.org/api/swiss/qMebYahN")
+.then(r => r.json())
+.then(d => {
+  document.getElementById("torneio").innerHTML = `
+    <h2>${d.name}</h2>
+    <p>Status: ${d.status}</p>
+    <p>Jogadores: ${d.nbPlayers}</p>
+    <p>Rodadas: ${d.nbRounds}</p>
+  `;
+});
+
+// ================= RANKING =================
+fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/results")
+.then(r => r.text())
+.then(t => {
+  let html="";
+  t.split("\n").forEach(l=>{
+    if(!l) return;
+    let j=JSON.parse(l);
+
+    html+=`
+      <tr class="${j.rank==1?"gold":""}">
+        <td>${j.rank}</td>
+        <td>${j.username}</td>
+        <td>${j.points}</td>
+      </tr>
+    `;
+  });
+  document.getElementById("ranking").innerHTML=html;
+});
+
+// ================= RODADAS + VISUAL =================
+fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/games")
+.then(r => r.text())
+.then(t => {
+
+  const linhas = t.split("\n").filter(l=>l);
+
+  let html="";
+  let rodada=1;
+  let jogosPorRodada=2;
+
+  for(let i=0;i<linhas.length;i+=jogosPorRodada){
+
+    html+=`<div class="rodada"><h3>Rodada ${rodada}</h3>`;
+
+    for(let j=0;j<jogosPorRodada;j++){
+      if(!linhas[i+j]) continue;
+
+      let g=JSON.parse(linhas[i+j]);
+
+      let w=g.players.white?.user?.name||"BYE";
+      let b=g.players.black?.user?.name||"BYE";
+
+      let r="-",c="";
+      if(g.status==="draw"){r="½ x ½";c="draw";}
+      else if(g.winner==="white"){r="1 x 0";c="win";}
+      else if(g.winner==="black"){r="0 x 1";c="loss";}
+
+      let link = "https://lichess.org/embed/" + g.id;
+
+      html+=`
+        <p class="${c}" style="cursor:pointer;" onclick="abrirJogo('${link}')">
+          ${w} ${r} ${b}
+        </p>
+      `;
+    }
+
+    html+=`</div>`;
+    rodada++;
+  }
+
+  document.getElementById("rodadas").innerHTML=html;
+
+});
+
+// ================= FUNÇÃO VISUALIZADOR =================
+function abrirJogo(link){
+  document.getElementById("viewer").style.display="block";
+  document.getElementById("frameJogo").src = link;
+
+  document.getElementById("viewer").scrollIntoView({
+    behavior: "smooth"
+  });
+}
+
+</script>
+
+</body>
+</html>      border-collapse: collapse;
       margin-top: 10px;
     }
 
