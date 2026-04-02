@@ -77,12 +77,6 @@
 <h2>📋 Rodadas</h2>
 <div id="rodadas">Carregando...</div>
 
-<!-- VISUALIZADOR -->
-<div id="viewer" class="card" style="display:none;">
-  <h2>♟️ Partida</h2>
-  <iframe id="frameJogo" width="100%" height="500" style="border:none;"></iframe>
-</div>
-
 <script>
 
 const proxy = "https://api.allorigins.win/raw?url=";
@@ -119,7 +113,7 @@ fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/results")
   document.getElementById("ranking").innerHTML=html;
 });
 
-// RODADAS COM BOTÃO (FUNCIONA NO CELULAR)
+// RODADAS
 fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/games")
 .then(r => r.text())
 .then(t => {
@@ -147,7 +141,7 @@ fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/games")
       else if(g.winner==="white"){r="1 x 0";c="win";}
       else if(g.winner==="black"){r="0 x 1";c="loss";}
 
-      let link = "https://lichess.org/embed/" + g.id;
+      let link = "https://lichess.org/" + g.id;
 
       html+=`
         <button class="${c}" onclick="abrirJogo('${link}')">
@@ -164,14 +158,9 @@ fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/games")
 
 });
 
-// FUNÇÃO
+// ABRIR JOGO
 function abrirJogo(link){
-  document.getElementById("viewer").style.display="block";
-  document.getElementById("frameJogo").src = link;
-
-  document.getElementById("viewer").scrollIntoView({
-    behavior: "smooth"
-  });
+  window.open(link, "_blank");
 }
 
 </script>
