@@ -17,15 +17,39 @@
     .card {
       background:#1e293b;
       padding:15px;
-      border-radius:10px;
+      border-radius:12px;
       margin-bottom:15px;
+      box-shadow:0 0 10px rgba(0,0,0,0.4);
     }
 
-    table { width:100%; border-collapse: collapse; }
-    th, td { padding:10px; text-align:center; }
+    .campeao {
+      text-align:center;
+      font-size:18px;
+      background: linear-gradient(90deg, gold, orange);
+      color:black;
+      font-weight:bold;
+    }
+
+    table {
+      width:100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding:8px;
+      text-align:center;
+    }
+
     th { background:#334155; }
 
-    .gold { color:gold; font-weight:bold; }
+    tr:nth-child(even) {
+      background:#1e293b;
+    }
+
+    .medalha {
+      font-size:18px;
+    }
 
     .rodada {
       background:#1e293b;
@@ -55,10 +79,21 @@
 
 <div id="torneio" class="card">Carregando...</div>
 
+<div id="campeao"></div>
+
 <h2>🏆 Ranking</h2>
 <div class="card">
 <table>
-<tr><th>#</th><th>Jogador</th><th>Pontos</th></tr>
+<tr>
+  <th>#</th>
+  <th>Jogador</th>
+  <th>Pts</th>
+  <th>TB</th>
+  <th>Perf</th>
+  <th>V</th>
+  <th>E</th>
+  <th>D</th>
+</tr>
 <tbody id="ranking"></tbody>
 </table>
 </div>
@@ -78,34 +113,49 @@ fetch("https://lichess.org/api/swiss/qMebYahN")
     <p>Jogadores: ${d.nbPlayers}</p>
     <p>Rodadas: ${d.nbRounds}</p>
   `;
-})
-.catch(() => {
-  document.getElementById("torneio").innerText = "Erro ao carregar";
 });
 
-// RANKING
+// RANKING PROFISSIONAL
 fetch("https://lichess.org/api/swiss/qMebYahN/results", {
   headers: { "Accept": "application/x-ndjson" }
 })
 .then(r => r.text())
 .then(t => {
+
   let html="";
+  let campeao="";
+
   t.split("\n").forEach(l=>{
     if(!l) return;
     let j=JSON.parse(l);
 
+    let medalha = j.rank==1?"🥇":j.rank==2?"🥈":j.rank==3?"🥉":j.rank;
+
+    if(j.rank==1){
+      campeao = `
+        <div class="card campeao">
+          🏆 Campeão: ${j.username} (${j.points} pts)
+        </div>
+      `;
+    }
+
     html+=`
-      <tr class="${j.rank==1?"gold":""}">
-        <td>${j.rank}</td>
+      <tr>
+        <td class="medalha">${medalha}</td>
         <td>${j.username}</td>
         <td>${j.points}</td>
+        <td>${j.tieBreak || "-"}</td>
+        <td>${j.performance || "-"}</td>
+        <td>${j.nbWins || 0}</td>
+        <td>${j.nbDraws || 0}</td>
+        <td>${j.nbLosses || 0}</td>
       </tr>
     `;
   });
+
   document.getElementById("ranking").innerHTML=html;
-})
-.catch(() => {
-  document.getElementById("ranking").innerHTML = "<tr><td colspan='3'>Erro</td></tr>";
+  document.getElementById("campeao").innerHTML=campeao;
+
 });
 
 // RODADAS
@@ -153,9 +203,6 @@ fetch("https://lichess.org/api/swiss/qMebYahN/games", {
 
   document.getElementById("rodadas").innerHTML=html;
 
-})
-.catch(() => {
-  document.getElementById("rodadas").innerText = "Erro ao carregar rodadas";
 });
 
 </script>
