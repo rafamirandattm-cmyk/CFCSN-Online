@@ -12,286 +12,72 @@
   <script src="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard.min.js"></script>
 
   <style>
-    body {
-      background: #0f172a;
-      color: #e2e8f0;
-      font-family: Arial;
-      padding: 10px;
-    }
-
-    h1 { text-align: center; color: #38bdf8; }
-
-    .card {
-      background:#1e293b;
-      padding:15px;
-      border-radius:12px;
-      margin-bottom:15px;
-      box-shadow:0 0 10px rgba(0,0,0,0.4);
-    }
-
-    .campeao {
-      text-align:center;
-      font-size:18px;
-      background: linear-gradient(90deg, gold, orange);
-      color:black;
-      font-weight:bold;
-    }
-
-    table {
-      width:100%;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
-
-    th, td {
-      padding:8px;
-      text-align:center;
-    }
-
-    th { background:#334155; }
-
-    tr:nth-child(even) {
-      background:#1e293b;
-    }
-
-    .medalha { font-size:18px; }
-
-    .rodada {
-      background:#1e293b;
-      padding:10px;
-      border-radius:10px;
-      margin-bottom:10px;
-    }
-
-    button {
-      width:100%;
-      background:none;
-      border:none;
-      text-align:left;
-      padding:10px;
-      font-size:16px;
-      cursor:pointer;
-    }
-
-    .win { color:#22c55e; }
-    .loss { color:#ef4444; }
-    .draw { color:#eab308; }
+    body { background:#0f172a; color:#e2e8f0; font-family:Arial; padding:10px;}
+    h1 { text-align:center; color:#38bdf8;}
+    .card { background:#1e293b; padding:15px; border-radius:12px; margin-bottom:15px;}
+    table { width:100%; border-collapse:collapse;}
+    th, td { padding:8px; text-align:center;}
+    th { background:#334155;}
   </style>
 </head>
 
 <body>
 
-<h1>♟️ CFCSN Torneios Online</h1>
+<h1>♟️ CFCSN</h1>
 
-<!-- TABULEIRO -->
-<h2>♟️ Tabuleiro</h2>
 <div class="card">
-  <div id="board" style="width:100%; max-width:400px; margin:auto;"></div>
+  <div id="board" style="max-width:400px;margin:auto;"></div>
 </div>
 
 <div id="torneio" class="card">Carregando...</div>
-<div id="campeao"></div>
 
 <h2>🏆 Ranking</h2>
 <div class="card">
 <table>
-<tr>
-  <th>#</th>
-  <th>Jogador</th>
-  <th>Pts</th>
-  <th>TB</th>
-  <th>Perf</th>
-  <th colspan="3">Resultados</th>
-</tr>
+<tr><th>#</th><th>Jogador</th><th>Pontos</th></tr>
 <tbody id="ranking"></tbody>
 </table>
 </div>
 
-<h2>📋 Rodadas</h2>
-<div id="rodadas">Carregando...</div>
-
 <script>
 
-// TABULEIRO
-var board = Chessboard('board', {
-  position: 'start'
-});
+const proxy = "https://api.allorigins.win/raw?url=";
 
-// PROXY
-const proxy = "https://corsproxy.io/?";
+// tabuleiro
+var board = Chessboard('board', { position: 'start' });
 
 // TORNEIO
 fetch(proxy + "https://lichess.org/api/swiss/qMebYahN")
-.then(r => r.json())
-.then(d => {
-  document.getElementById("torneio").innerHTML = `
-    <h2>${d.name}</h2>
-    <p>Status: ${d.status}</p>
-    <p>Jogadores: ${d.nbPlayers}</p>
-    <p>Rodadas: ${d.nbRounds}</p>
-  `;
+.then(r=>r.json())
+.then(d=>{
+  document.getElementById("torneio").innerHTML =
+    `<h2>${d.name}</h2>
+     <p>Jogadores: ${d.nbPlayers}</p>`;
 });
 
-// RANKING
-Promise.all([
-  fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/results", {
-    headers: { "Accept": "application/x-ndjson" }
-  }).then(r => r.text()),
-
-  fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/games", {
-    headers: { "Accept": "application/x-ndjson" }
-  }).then(r => r.text())
-
-]).then(([resultsText, gamesText]) => {
-
-  let jogadores = {};
-  let campeao = "";
-
-  resultsText.split("\n").forEach(l => {
-    if (!l) return;
-    let j = JSON.parse(l);
-
-    jogadores[j.username] = {
-      rank: j.rank,
-      username: j.username,
-      points: j.points,
-      tieBreak: j.tieBreak,
-      performance: j.performance,
-      score: []
-    };
-  });
-
-  gamesText.split("\n").forEach(l => {
-    if (!l) return;
-    let g = JSON.parse(l);
-
-    let white = g.players.white?.user?.name;
-    let black = g.players.black?.user?.name;
-
-    if (!black || black === "BYE") {
-      jogadores[white]?.score.push("1B");
-      return;
-    }
-
-    if (!white || white === "BYE") {
-      jogadores[black]?.score.push("1B");
-      return;
-    }
-
-    if (g.status === "draw") {
-      jogadores[white]?.score.push("½");
-      jogadores[black]?.score.push("½");
-    } else if (g.winner === "white") {
-      jogadores[white]?.score.push("1");
-      jogadores[black]?.score.push("0");
-    } else if (g.winner === "black") {
-      jogadores[white]?.score.push("0");
-      jogadores[black]?.score.push("1");
-    }
-  });
-
-  let html = "";
-
-  Object.values(jogadores)
-    .sort((a,b)=>a.rank-b.rank)
-    .forEach(j => {
-
-      let medalha = j.rank==1?"🥇":j.rank==2?"🥈":j.rank==3?"🥉":j.rank;
-
-      if(j.rank==1){
-        campeao = `
-          <div class="card campeao">
-            🏆 Campeão: ${j.username} (${j.points} pts)
-          </div>
-        `;
-      }
-
-      let scoreVisual = j.score.map(s=>{
-        if(s==="1B") return `<span style="color:gray">1</span>`;
-        if(s==="1") return `<span style="color:#22c55e">1</span>`;
-        if(s==="0") return `<span style="color:#ef4444">0</span>`;
-        return `<span style="color:#eab308">½</span>`;
-      }).join(" ");
-
-      html += `
-        <tr>
-          <td class="medalha">${medalha}</td>
-          <td>${j.username}</td>
-          <td>${j.points}</td>
-          <td>${j.tieBreak || "-"}</td>
-          <td>${j.performance || "-"}</td>
-          <td colspan="3">${scoreVisual}</td>
-        </tr>
-      `;
-    });
-
-  document.getElementById("ranking").innerHTML = html;
-  document.getElementById("campeao").innerHTML = campeao;
-
-});
-
-// RODADAS
-fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/games", {
-  headers: { "Accept": "application/x-ndjson" }
-})
-.then(r => r.text())
-.then(t => {
-
-  const linhas = t.split("\n").filter(l=>l);
+// RANKING (FUNCIONA)
+fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/results")
+.then(r=>r.text())
+.then(t=>{
 
   let html="";
-  let rodada=1;
-  let jogosPorRodada=2;
 
-  for(let i=0;i<linhas.length;i+=jogosPorRodada){
+  t.split("\n").forEach(l=>{
+    if(!l) return;
+    let j=JSON.parse(l);
 
-    html+=`<div class="rodada"><h3>Rodada ${rodada}</h3>`;
+    html+=`
+      <tr>
+        <td>${j.rank}</td>
+        <td>${j.username}</td>
+        <td>${j.points}</td>
+      </tr>
+    `;
+  });
 
-    for(let j=0;j<jogosPorRodada;j++){
-      if(!linhas[i+j]) continue;
-
-      let g=JSON.parse(linhas[i+j]);
-
-      let w=g.players.white?.user?.name||"BYE";
-      let b=g.players.black?.user?.name||"BYE";
-
-      let r="-",c="";
-      if(g.status==="draw"){r="½ x ½";c="draw";}
-      else if(g.winner==="white"){r="1 x 0";c="win";}
-      else if(g.winner==="black"){r="0 x 1";c="loss";}
-
-      html+=`
-        <button class="${c}" onclick="carregarPartida('${g.id}')">
-          ${w} ${r} ${b}
-        </button>
-      `;
-    }
-
-    html+=`</div>`;
-    rodada++;
-  }
-
-  document.getElementById("rodadas").innerHTML=html;
+  document.getElementById("ranking").innerHTML=html;
 
 });
-
-// TABULEIRO CARREGAR PARTIDA
-function carregarPartida(gameId) {
-
-  fetch(proxy + `https://lichess.org/game/export/${gameId}?moves=false&tags=false&clocks=false&evals=false&opening=false&literate=false`, {
-    headers: { "Accept": "application/json" }
-  })
-  .then(r => r.json())
-  .then(game => {
-    if(game.fen){
-      board.position(game.fen);
-    } else {
-      alert("Erro ao carregar posição");
-    }
-  })
-  .catch(() => alert("Erro ao carregar partida"));
-
-}
 
 </script>
 
