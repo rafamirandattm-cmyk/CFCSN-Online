@@ -4,7 +4,7 @@
   <title>CFCSN</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- jQuery (OBRIGATÓRIO) -->
+  <!-- jQuery -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
   <!-- Chessboard -->
@@ -112,13 +112,16 @@
 
 <script>
 
-// inicia tabuleiro
+// TABULEIRO
 var board = Chessboard('board', {
   position: 'start'
 });
 
+// PROXY
+const proxy = "https://corsproxy.io/?";
+
 // TORNEIO
-fetch("https://lichess.org/api/swiss/qMebYahN")
+fetch(proxy + "https://lichess.org/api/swiss/qMebYahN")
 .then(r => r.json())
 .then(d => {
   document.getElementById("torneio").innerHTML = `
@@ -131,11 +134,11 @@ fetch("https://lichess.org/api/swiss/qMebYahN")
 
 // RANKING
 Promise.all([
-  fetch("https://lichess.org/api/swiss/qMebYahN/results", {
+  fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/results", {
     headers: { "Accept": "application/x-ndjson" }
   }).then(r => r.text()),
 
-  fetch("https://lichess.org/api/swiss/qMebYahN/games", {
+  fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/games", {
     headers: { "Accept": "application/x-ndjson" }
   }).then(r => r.text())
 
@@ -228,7 +231,7 @@ Promise.all([
 });
 
 // RODADAS
-fetch("https://lichess.org/api/swiss/qMebYahN/games", {
+fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/games", {
   headers: { "Accept": "application/x-ndjson" }
 })
 .then(r => r.text())
@@ -272,10 +275,10 @@ fetch("https://lichess.org/api/swiss/qMebYahN/games", {
 
 });
 
-// carregar posição no tabuleiro
+// TABULEIRO CARREGAR PARTIDA
 function carregarPartida(gameId) {
 
-  fetch(`https://lichess.org/game/export/${gameId}?moves=false&tags=false&clocks=false&evals=false&opening=false&literate=false`, {
+  fetch(proxy + `https://lichess.org/game/export/${gameId}?moves=false&tags=false&clocks=false&evals=false&opening=false&literate=false`, {
     headers: { "Accept": "application/json" }
   })
   .then(r => r.json())
