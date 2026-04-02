@@ -4,6 +4,23 @@
   <title>CFCSN</title>
 </head>
 <body>
-  <h1>Site do CFCSN</h1>
+
+<h1>CFCSN - Torneios</h1>
+
+<div id="torneio"></div>
+
+<script>
+fetch("https://lichess.org/api/swiss/qMebYahN")
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById("torneio").innerHTML = `
+      <h2>${data.name}</h2>
+      <p>Status: ${data.status}</p>
+      <p>Jogadores: ${data.nbPlayers}</p>
+      <p>Rodadas: ${data.nbRounds}</p>
+    `;
+  });
+</script>
+
 </body>
 </html>
