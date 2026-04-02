@@ -24,73 +24,83 @@
 
 <script>
 
-const proxy = "https://corsproxy.io/?";
-
 // ================= TORNEIO =================
-fetch(proxy + "https://lichess.org/api/swiss/qMebYahN")
-  .then(r => r.json())
-  .then(d => {
-    document.getElementById("torneio").innerHTML = `
-      <h2>${d.name}</h2>
-      <p>Status: ${d.status}</p>
-      <p>Jogadores: ${d.nbPlayers}</p>
-      <p>Rodadas: ${d.nbRounds}</p>
-    `;
-  })
-  .catch(() => {
-    document.getElementById("torneio").innerText = "Erro ao carregar torneio";
-  });
+fetch("https://lichess.org/api/swiss/qMebYahN", {
+  headers: {
+    "Accept": "application/json"
+  }
+})
+.then(r => r.json())
+.then(d => {
+  document.getElementById("torneio").innerHTML = `
+    <h2>${d.name}</h2>
+    <p>Status: ${d.status}</p>
+    <p>Jogadores: ${d.nbPlayers}</p>
+    <p>Rodadas: ${d.nbRounds}</p>
+  `;
+})
+.catch(() => {
+  document.getElementById("torneio").innerText = "Erro ao carregar";
+});
 
 // ================= RANKING =================
-fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/results")
-  .then(r => r.text())
-  .then(t => {
-    const linhas = t.trim().split("\n");
-    let html = "";
+fetch("https://lichess.org/api/swiss/qMebYahN/results", {
+  headers: {
+    "Accept": "application/x-ndjson"
+  }
+})
+.then(r => r.text())
+.then(t => {
+  const linhas = t.trim().split("\n");
+  let html = "";
 
-    linhas.forEach(l => {
-      if (!l) return;
+  linhas.forEach(l => {
+    if (!l) return;
 
-      const j = JSON.parse(l);
+    const j = JSON.parse(l);
 
-      html += `
-        <tr>
-          <td>${j.rank}</td>
-          <td>${j.username}</td>
-          <td>${j.points}</td>
-        </tr>
-      `;
-    });
-
-    document.getElementById("ranking").innerHTML = html;
-  })
-  .catch(() => {
-    document.getElementById("ranking").innerHTML = "<tr><td colspan='3'>Erro ao carregar</td></tr>";
+    html += `
+      <tr>
+        <td>${j.rank}</td>
+        <td>${j.username}</td>
+        <td>${j.points}</td>
+      </tr>
+    `;
   });
+
+  document.getElementById("ranking").innerHTML = html;
+})
+.catch(() => {
+  document.getElementById("ranking").innerHTML = "<tr><td colspan='3'>Erro</td></tr>";
+});
 
 // ================= RODADAS =================
-fetch(proxy + "https://lichess.org/api/swiss/qMebYahN/games")
-  .then(r => r.text())
-  .then(t => {
-    const linhas = t.trim().split("\n");
-    let html = "";
+fetch("https://lichess.org/api/swiss/qMebYahN/games", {
+  headers: {
+    "Accept": "application/x-ndjson"
+  }
+})
+.then(r => r.text())
+.then(t => {
+  const linhas = t.trim().split("\n");
+  let html = "";
 
-    linhas.forEach(l => {
-      if (!l) return;
+  linhas.forEach(l => {
+    if (!l) return;
 
-      const j = JSON.parse(l);
+    const j = JSON.parse(l);
 
-      const white = j.players.white?.user?.name || "BYE";
-      const black = j.players.black?.user?.name || "BYE";
+    const white = j.players.white?.user?.name || "BYE";
+    const black = j.players.black?.user?.name || "BYE";
 
-      html += `<p>${white} vs ${black}</p>`;
-    });
-
-    document.getElementById("rodadas").innerHTML = html;
-  })
-  .catch(() => {
-    document.getElementById("rodadas").innerText = "Erro ao carregar rodadas";
+    html += `<p>${white} vs ${black}</p>`;
   });
+
+  document.getElementById("rodadas").innerHTML = html;
+})
+.catch(() => {
+  document.getElementById("rodadas").innerText = "Erro ao carregar";
+});
 
 </script>
 
