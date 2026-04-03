@@ -89,6 +89,18 @@
       .podium { flex-direction:column; align-items:center; }
       .podium .medal { width:120px; margin-bottom:10px;}
     }
+
+    /* Placeholder quando nenhum jogo é selecionado */
+    #tabuleiro-placeholder {
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:calc(100vh - 150px);
+      background:#1e293b;
+      color:#9ca3af;
+      font-size:18px;
+      border-radius:10px;
+    }
   </style>
 </head>
 <body>
@@ -123,13 +135,14 @@
   <div class="col-direita">
     <h2>♟️ Tabuleiro</h2>
     <div class="card">
-      <iframe id="tabuleiro" src=""></iframe>
+      <div id="tabuleiro-placeholder">Clique em um jogo para ver aqui</div>
+      <iframe id="tabuleiro" style="display:none;"></iframe>
     </div>
   </div>
 </div>
 
 <script>
-const jogosPorRodada = 2; // ajuste aqui conforme necessário
+const jogosPorRodada = 2; 
 let nbPlayers = 0;
 
 // Torneio
@@ -141,7 +154,7 @@ fetch("https://lichess.org/api/swiss/qMebYahN")
     `<h2>${d.name}</h2><p>Jogadores: ${d.nbPlayers}</p>`;
 });
 
-// Ranking com sequência detalhada tipo 1 0 1 1
+// Ranking com sequência 1 0 ½
 fetch("https://lichess.org/api/swiss/qMebYahN/results", { headers:{"Accept":"application/x-ndjson"} })
 .then(r=>r.text())
 .then(t=>{
@@ -162,7 +175,7 @@ fetch("https://lichess.org/api/swiss/qMebYahN/results", { headers:{"Accept":"app
     });
   });
 
-  // Monta podium
+  // Podium
   let podiumHtml="";
   const medalas = ['gold','silver','bronze'];
   for(let i=0;i<3 && i<jogadores.length;i++){
@@ -170,7 +183,7 @@ fetch("https://lichess.org/api/swiss/qMebYahN/results", { headers:{"Accept":"app
   }
   document.getElementById("podium").innerHTML = podiumHtml;
 
-  // Monta tabela ranking
+  // Ranking
   let html="";
   jogadores.forEach(j=>{
     html += `<tr>
@@ -184,7 +197,7 @@ fetch("https://lichess.org/api/swiss/qMebYahN/results", { headers:{"Accept":"app
   document.getElementById("ranking").innerHTML = html;
 });
 
-// Jogos agrupados corretamente por rodada
+// Jogos agrupados por rodada
 fetch("https://lichess.org/api/swiss/qMebYahN/games", { headers:{ "Accept":"application/x-ndjson" } })
 .then(r=>r.text())
 .then(t=>{
@@ -208,7 +221,10 @@ fetch("https://lichess.org/api/swiss/qMebYahN/games", { headers:{ "Accept":"appl
 });
 
 function abrirPartida(id){
-  document.getElementById("tabuleiro").src = "https://lichess.org/embed/game/"+id;
+  document.getElementById("tabuleiro-placeholder").style.display = "none";
+  const frame = document.getElementById("tabuleiro");
+  frame.style.display = "block";
+  frame.src = "https://lichess.org/embed/game/"+id;
 }
 </script>
 
