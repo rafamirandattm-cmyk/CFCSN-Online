@@ -90,7 +90,6 @@
       .podium .medal { width:120px; margin-bottom:10px;}
     }
 
-    /* Placeholder quando nenhum jogo é selecionado */
     #tabuleiro-placeholder {
       display:flex;
       justify-content:center;
@@ -109,7 +108,6 @@
 
 <div id="torneio" class="card">Carregando...</div>
 
-<!-- Podium -->
 <div id="podium" class="card podium">Carregando podium...</div>
 
 <h2>🏆 Ranking Detalhado</h2>
@@ -120,7 +118,7 @@
   <th>Jogador</th>
   <th>Pontos</th>
   <th>Perf.</th>
-  <th>Sequência</th>
+  <th>Tie-break</th>
 </tr>
 <tbody id="ranking"></tbody>
 </table>
@@ -142,7 +140,7 @@
 </div>
 
 <script>
-const jogosPorRodada = 2; // ajuste conforme necessário
+const jogosPorRodada = 2;
 let nbPlayers = 0;
 
 // TORNEIO
@@ -154,7 +152,7 @@ fetch("https://lichess.org/api/swiss/qMebYahN")
     `<h2>${d.name}</h2><p>Jogadores: ${d.nbPlayers}</p>`;
 });
 
-// RANKING COM SEQUÊNCIA 1 0 ½
+// RANKING COM TIE-BREAK
 fetch("https://lichess.org/api/swiss/qMebYahN/results", { headers:{"Accept":"application/x-ndjson"} })
 .then(r=>r.text())
 .then(t=>{
@@ -162,16 +160,12 @@ fetch("https://lichess.org/api/swiss/qMebYahN/results", { headers:{"Accept":"app
   t.split("\n").forEach(l=>{
     if(!l) return;
     let j = JSON.parse(l);
-    let seq="-";
-    if(j.streak && Array.isArray(j.streak)){
-      seq = j.streak.map(s => s===1?'1': s===0?'0':'½').join(' ');
-    }
     jogadores.push({
       rank: j.rank,
       username: j.username,
       points: j.points,
       performance: j.performance || '-',
-      seq: seq
+      tiebreak: j.tieBreak || '-' // aqui pegamos o tie-break do JSON
     });
   });
 
@@ -191,13 +185,13 @@ fetch("https://lichess.org/api/swiss/qMebYahN/results", { headers:{"Accept":"app
       <td>${j.username}</td>
       <td>${j.points}</td>
       <td>${j.performance}</td>
-      <td>${j.seq}</td>
+      <td>${j.tiebreak}</td>
     </tr>`;
   });
   document.getElementById("ranking").innerHTML = html;
 });
 
-// JOGOS AGRUPADOS POR RODADA
+// JOGOS POR RODADA
 fetch("https://lichess.org/api/swiss/qMebYahN/games", { headers:{ "Accept":"application/x-ndjson" } })
 .then(r=>r.text())
 .then(t=>{
@@ -220,7 +214,7 @@ fetch("https://lichess.org/api/swiss/qMebYahN/games", { headers:{ "Accept":"appl
   document.getElementById("jogos").innerHTML = html;
 });
 
-// FUNÇÃO PARA ABRIR PARTIDA
+// ABRIR PARTIDA
 function abrirPartida(id){
   document.getElementById("tabuleiro-placeholder").style.display = "none";
   const frame = document.getElementById("tabuleiro");
