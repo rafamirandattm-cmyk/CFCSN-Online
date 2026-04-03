@@ -61,20 +61,20 @@
     }
 
     .col-direita {
-      width:420px;
+      width:450px;  /* aumentei um pouco */
       position:sticky;
       top:10px;
     }
 
     iframe {
       width:100%;
-      height:400px;
+      height:600px; /* aumento máximo razoável */
       border:none;
       border-radius:10px;
     }
 
     /* RESPONSIVO */
-    @media(max-width: 800px){
+    @media(max-width: 900px){
       .flex {
         flex-direction:column;
       }
@@ -82,6 +82,18 @@
         width:100%;
         position:static;
       }
+      iframe {
+        height:400px;
+      }
+    }
+
+    .rodada {
+      margin-bottom:15px;
+    }
+
+    .rodada h3 {
+      margin-bottom:8px;
+      color:#facc15;
     }
 
   </style>
@@ -120,9 +132,7 @@
   <div class="col-direita">
     <h2>♟️ Tabuleiro</h2>
     <div class="card">
-      <iframe id="tabuleiro"
-        src="">
-      </iframe>
+      <iframe id="tabuleiro" src=""></iframe>
     </div>
   </div>
 
@@ -149,7 +159,6 @@ fetch("https://lichess.org/api/swiss/qMebYahN/results", {
   t.split("\n").forEach(l=>{
     if(!l) return;
     let j=JSON.parse(l);
-
     html+=`<tr>
       <td>${j.rank}</td>
       <td>${j.username}</td>
@@ -162,25 +171,30 @@ fetch("https://lichess.org/api/swiss/qMebYahN/results", {
   document.getElementById("ranking").innerHTML=html;
 });
 
-// JOGOS
+// JOGOS POR RODADA
 fetch("https://lichess.org/api/swiss/qMebYahN/games", {
   headers: { "Accept": "application/x-ndjson" }
 })
 .then(r=>r.text())
 .then(t=>{
-  let html="";
+  let jogos = {};
   t.split("\n").forEach(l=>{
     if(!l) return;
     let g=JSON.parse(l);
+    let rodada = g.round || "Rodada ?";
+    if(!jogos[rodada]) jogos[rodada]=[];
+    jogos[rodada].push(g);
+  });
 
-    let w=g.players.white?.user?.name||"BYE";
-    let b=g.players.black?.user?.name||"BYE";
-
-    html+=`
-      <button onclick="abrirPartida('${g.id}')">
-        ${w} vs ${b}
-      </button>
-    `;
+  let html="";
+  Object.keys(jogos).sort((a,b)=>a-b).forEach(r=>{
+    html+=`<div class="rodada"><h3>Rodada ${r}</h3>`;
+    jogos[r].forEach(g=>{
+      let w=g.players.white?.user?.name||"BYE";
+      let b=g.players.black?.user?.name||"BYE";
+      html+=`<button onclick="abrirPartida('${g.id}')">${w} vs ${b}</button>`;
+    });
+    html+="</div>";
   });
 
   document.getElementById("jogos").innerHTML=html;
