@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>CFCSN</title>
+  <title>CFCSN - Full Screen</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <style>
     body {
       background:#0f172a;
       color:#e2e8f0;
       font-family:Arial;
+      margin:0;
       padding:10px;
     }
 
-    h1 { text-align:center; color:#38bdf8; }
+    h1 { text-align:center; color:#38bdf8; margin-bottom:20px; }
 
     .card {
       background:#1e293b;
@@ -49,7 +49,6 @@
       background:#475569;
     }
 
-    /* LAYOUT LADO A LADO DINÂMICO */
     .flex {
       display:flex;
       gap:15px;
@@ -57,36 +56,22 @@
     }
 
     .col-esquerda {
-      flex:1; /* ocupa o espaço mínimo necessário */
+      flex:1;
+      min-width:250px; /* garante espaço mínimo para a lista */
+      max-width:400px;
     }
 
     .col-direita {
-      flex-basis:0;  /* base para expandir */
-      flex-grow:2;    /* ocupa toda largura restante */
+      flex:5; /* ocupa quase todo o espaço restante */
       position:sticky;
       top:10px;
     }
 
     iframe {
       width:100%;
-      height:600px;
+      height:calc(100vh - 150px);
       border:none;
       border-radius:10px;
-    }
-
-    /* RESPONSIVO */
-    @media(max-width: 1000px){
-      .flex {
-        flex-direction:column;
-      }
-      .col-direita {
-        width:100%;
-        flex-grow:1;
-        position:static;
-      }
-      iframe {
-        height:400px;
-      }
     }
 
     .rodada {
@@ -98,9 +83,15 @@
       color:#facc15;
     }
 
+    @media(max-width:1000px){
+      .flex { flex-direction:column; }
+      .col-esquerda { max-width:none; }
+      .col-direita { position:static; flex:1; }
+      iframe { height:400px; }
+    }
+
   </style>
 </head>
-
 <body>
 
 <h1>♟️ CFCSN</h1>
@@ -124,13 +115,11 @@
 
 <div class="flex">
 
-  <!-- ESQUERDA -->
   <div class="col-esquerda">
     <h2>📋 Jogos</h2>
     <div id="jogos" class="card">Carregando...</div>
   </div>
 
-  <!-- DIREITA -->
   <div class="col-direita">
     <h2>♟️ Tabuleiro</h2>
     <div class="card">
@@ -142,7 +131,7 @@
 
 <script>
 
-// TORNEIO
+// Torneio
 fetch("https://lichess.org/api/swiss/qMebYahN")
 .then(r=>r.json())
 .then(d=>{
@@ -151,7 +140,7 @@ fetch("https://lichess.org/api/swiss/qMebYahN")
      <p>Jogadores: ${d.nbPlayers}</p>`;
 });
 
-// RANKING COM STREAK COLORIDO
+// Ranking com streak colorido
 fetch("https://lichess.org/api/swiss/qMebYahN/results", {
   headers: { "Accept": "application/x-ndjson" }
 })
@@ -162,7 +151,6 @@ fetch("https://lichess.org/api/swiss/qMebYahN/results", {
     if(!l) return;
     let j=JSON.parse(l);
 
-    // sequencia colorida: verde=vitória, vermelho=derrota, cinza=empate
     let streakHtml="-";
     if(j.streak && Array.isArray(j.streak)){
       streakHtml = j.streak.map(s=>{
@@ -185,9 +173,9 @@ fetch("https://lichess.org/api/swiss/qMebYahN/results", {
   document.getElementById("ranking").innerHTML=html;
 });
 
-// JOGOS POR RODADA
+// Jogos agrupados por rodada
 fetch("https://lichess.org/api/swiss/qMebYahN/games", {
-  headers: { "Accept": "application/x-ndjson" }
+  headers:{ "Accept":"application/x-ndjson" }
 })
 .then(r=>r.text())
 .then(t=>{
@@ -201,7 +189,7 @@ fetch("https://lichess.org/api/swiss/qMebYahN/games", {
   });
 
   let html="";
-  Object.keys(jogos).sort((a,b)=>a-b).forEach(r=>{
+  Object.keys(jogos).sort((a,b)=>parseInt(a)-parseInt(b)).forEach(r=>{
     html+=`<div class="rodada"><h3>Rodada ${r}</h3>`;
     jogos[r].forEach(g=>{
       let w=g.players.white?.user?.name||"BYE";
@@ -214,7 +202,7 @@ fetch("https://lichess.org/api/swiss/qMebYahN/games", {
   document.getElementById("jogos").innerHTML=html;
 });
 
-// TROCAR TABULEIRO
+// Atualizar tabuleiro
 function abrirPartida(id){
   document.getElementById("tabuleiro").src =
     "https://lichess.org/embed/game/" + id;
