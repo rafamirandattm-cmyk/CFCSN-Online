@@ -142,10 +142,10 @@
 </div>
 
 <script>
-const jogosPorRodada = 2; 
+const jogosPorRodada = 2; // ajuste conforme necessário
 let nbPlayers = 0;
 
-// Torneio
+// TORNEIO
 fetch("https://lichess.org/api/swiss/qMebYahN")
 .then(r=>r.json())
 .then(d=>{
@@ -154,7 +154,7 @@ fetch("https://lichess.org/api/swiss/qMebYahN")
     `<h2>${d.name}</h2><p>Jogadores: ${d.nbPlayers}</p>`;
 });
 
-// Ranking com sequência 1 0 ½
+// RANKING COM SEQUÊNCIA 1 0 ½
 fetch("https://lichess.org/api/swiss/qMebYahN/results", { headers:{"Accept":"application/x-ndjson"} })
 .then(r=>r.text())
 .then(t=>{
@@ -164,7 +164,7 @@ fetch("https://lichess.org/api/swiss/qMebYahN/results", { headers:{"Accept":"app
     let j = JSON.parse(l);
     let seq="-";
     if(j.streak && Array.isArray(j.streak)){
-      seq = j.streak.map(s=> s===1?'1': s===0?'0':'½' ).join(' ');
+      seq = j.streak.map(s => s===1?'1': s===0?'0':'½').join(' ');
     }
     jogadores.push({
       rank: j.rank,
@@ -197,7 +197,7 @@ fetch("https://lichess.org/api/swiss/qMebYahN/results", { headers:{"Accept":"app
   document.getElementById("ranking").innerHTML = html;
 });
 
-// Jogos agrupados por rodada
+// JOGOS AGRUPADOS POR RODADA
 fetch("https://lichess.org/api/swiss/qMebYahN/games", { headers:{ "Accept":"application/x-ndjson" } })
 .then(r=>r.text())
 .then(t=>{
@@ -220,6 +220,7 @@ fetch("https://lichess.org/api/swiss/qMebYahN/games", { headers:{ "Accept":"appl
   document.getElementById("jogos").innerHTML = html;
 });
 
+// FUNÇÃO PARA ABRIR PARTIDA
 function abrirPartida(id){
   document.getElementById("tabuleiro-placeholder").style.display = "none";
   const frame = document.getElementById("tabuleiro");
