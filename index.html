@@ -5,22 +5,85 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body { background:#0f172a; color:#e2e8f0; font-family:Arial; padding:10px;}
-    h1 { text-align:center; color:#38bdf8;}
-    .card { background:#1e293b; padding:15px; border-radius:12px; margin-bottom:15px;}
-    table { width:100%; border-collapse:collapse;}
-    th, td { padding:8px; text-align:center;}
-    th { background:#334155;}
+    body {
+      background:#0f172a;
+      color:#e2e8f0;
+      font-family:Arial;
+      padding:10px;
+    }
+
+    h1 { text-align:center; color:#38bdf8; }
+
+    .card {
+      background:#1e293b;
+      padding:15px;
+      border-radius:12px;
+      margin-bottom:15px;
+    }
+
+    table {
+      width:100%;
+      border-collapse:collapse;
+    }
+
+    th, td {
+      padding:8px;
+      text-align:center;
+    }
+
+    th { background:#334155; }
+
     button {
       width:100%;
-      background:#1e293b;
+      background:#334155;
       border:none;
       padding:10px;
       margin:5px 0;
       color:white;
       cursor:pointer;
       border-radius:8px;
+      transition:0.2s;
     }
+
+    button:hover {
+      background:#475569;
+    }
+
+    /* LAYOUT LADO A LADO */
+    .flex {
+      display:flex;
+      gap:15px;
+      align-items:flex-start;
+    }
+
+    .col-esquerda {
+      flex:1;
+    }
+
+    .col-direita {
+      width:420px;
+      position:sticky;
+      top:10px;
+    }
+
+    iframe {
+      width:100%;
+      height:400px;
+      border:none;
+      border-radius:10px;
+    }
+
+    /* RESPONSIVO */
+    @media(max-width: 800px){
+      .flex {
+        flex-direction:column;
+      }
+      .col-direita {
+        width:100%;
+        position:static;
+      }
+    }
+
   </style>
 </head>
 
@@ -28,32 +91,46 @@
 
 <h1>♟️ CFCSN</h1>
 
-<!-- TABULEIRO REAL -->
-<div class="card">
-  <iframe id="tabuleiro"
-    src="https://lichess.org/embed/game/undefined"
-    width="100%"
-    height="400"
-    frameborder="0">
-  </iframe>
-</div>
-
 <div id="torneio" class="card">Carregando...</div>
 
 <h2>🏆 Ranking</h2>
 <div class="card">
 <table>
-<tr><th>#</th><th>Jogador</th><th>Pontos</th></tr>
+<tr>
+  <th>#</th>
+  <th>Jogador</th>
+  <th>Pontos</th>
+  <th>Performance</th>
+  <th>Sequência</th>
+  <th>Tie-Break</th>
+</tr>
 <tbody id="ranking"></tbody>
 </table>
 </div>
 
-<h2>📋 Jogos</h2>
-<div id="jogos" class="card">Carregando...</div>
+<div class="flex">
+
+  <!-- ESQUERDA -->
+  <div class="col-esquerda">
+    <h2>📋 Jogos</h2>
+    <div id="jogos" class="card">Carregando...</div>
+  </div>
+
+  <!-- DIREITA -->
+  <div class="col-direita">
+    <h2>♟️ Tabuleiro</h2>
+    <div class="card">
+      <iframe id="tabuleiro"
+        src="">
+      </iframe>
+    </div>
+  </div>
+
+</div>
 
 <script>
 
-// TORNEIO (funciona direto)
+// TORNEIO
 fetch("https://lichess.org/api/swiss/qMebYahN")
 .then(r=>r.json())
 .then(d=>{
@@ -62,7 +139,7 @@ fetch("https://lichess.org/api/swiss/qMebYahN")
      <p>Jogadores: ${d.nbPlayers}</p>`;
 });
 
-// RANKING (NDJSON funciona direto)
+// RANKING
 fetch("https://lichess.org/api/swiss/qMebYahN/results", {
   headers: { "Accept": "application/x-ndjson" }
 })
@@ -72,12 +149,20 @@ fetch("https://lichess.org/api/swiss/qMebYahN/results", {
   t.split("\n").forEach(l=>{
     if(!l) return;
     let j=JSON.parse(l);
-    html+=`<tr><td>${j.rank}</td><td>${j.username}</td><td>${j.points}</td></tr>`;
+
+    html+=`<tr>
+      <td>${j.rank}</td>
+      <td>${j.username}</td>
+      <td>${j.points}</td>
+      <td>${j.performance || '-'}</td>
+      <td>${j.streak || '-'}</td>
+      <td>${j.tieBreak || '-'}</td>
+    </tr>`;
   });
   document.getElementById("ranking").innerHTML=html;
 });
 
-// JOGOS (SEM PROXY, só lista básica)
+// JOGOS
 fetch("https://lichess.org/api/swiss/qMebYahN/games", {
   headers: { "Accept": "application/x-ndjson" }
 })
