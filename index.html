@@ -62,11 +62,32 @@
     .rodada { margin-bottom:15px; }
     .rodada h3 { margin-bottom:8px; color:#facc15; }
 
+    .podium {
+      display:flex;
+      justify-content:center;
+      gap:20px;
+      margin-bottom:20px;
+      align-items:flex-end;
+    }
+    .podium .medal {
+      background:#334155;
+      padding:10px;
+      border-radius:12px;
+      width:100px;
+      text-align:center;
+      color:white;
+    }
+    .podium .gold { background:#FFD700; color:#000; font-weight:bold; font-size:18px; height:140px; }
+    .podium .silver { background:#C0C0C0; color:#000; height:120px; }
+    .podium .bronze { background:#CD7F32; color:#000; height:100px; }
+
     @media(max-width:1000px){
       .flex { flex-direction:column; }
       .col-esquerda { max-width:none; }
       .col-direita { position:static; flex:1; }
       iframe { height:400px; }
+      .podium { flex-direction:column; align-items:center; }
+      .podium .medal { width:120px; margin-bottom:10px;}
     }
   </style>
 </head>
@@ -76,7 +97,10 @@
 
 <div id="torneio" class="card">Carregando...</div>
 
-<h2>🏆 Ranking</h2>
+<!-- Podium -->
+<div id="podium" class="card podium">Carregando podium...</div>
+
+<h2>🏆 Ranking Detalhado</h2>
 <div class="card">
 <table>
 <tr>
@@ -84,7 +108,7 @@
   <th>Jogador</th>
   <th>Pontos</th>
   <th>Perf.</th>
-  <th>Seq.</th>
+  <th>Sequência</th>
 </tr>
 <tbody id="ranking"></tbody>
 </table>
@@ -105,8 +129,7 @@
 </div>
 
 <script>
-const jogosPorRodada = 2; // cada rodada tem 2 jogos
-
+const jogosPorRodada = 2; // ajuste aqui conforme necessário
 let nbPlayers = 0;
 
 // Torneio
@@ -118,31 +141,44 @@ fetch("https://lichess.org/api/swiss/qMebYahN")
     `<h2>${d.name}</h2><p>Jogadores: ${d.nbPlayers}</p>`;
 });
 
-// Ranking com sequência tipo 1010111
+// Ranking com sequência detalhada tipo 1 0 1 1
 fetch("https://lichess.org/api/swiss/qMebYahN/results", { headers:{"Accept":"application/x-ndjson"} })
 .then(r=>r.text())
 .then(t=>{
-  let html="";
+  let jogadores=[];
   t.split("\n").forEach(l=>{
     if(!l) return;
     let j = JSON.parse(l);
-
-    let streakHtml="-";
+    let seq="-";
     if(j.streak && Array.isArray(j.streak)){
-      streakHtml = j.streak.map(s=>{
-        if(s===1) return '1';
-        if(s===0) return '0';
-        if(s===0.5) return '½';
-        return s;
-      }).join('');
+      seq = j.streak.map(s=> s===1?'1': s===0?'0':'½' ).join(' ');
     }
+    jogadores.push({
+      rank: j.rank,
+      username: j.username,
+      points: j.points,
+      performance: j.performance || '-',
+      seq: seq
+    });
+  });
 
+  // Monta podium
+  let podiumHtml="";
+  const medalas = ['gold','silver','bronze'];
+  for(let i=0;i<3 && i<jogadores.length;i++){
+    podiumHtml += `<div class="medal ${medalas[i]}">${jogadores[i].username}</div>`;
+  }
+  document.getElementById("podium").innerHTML = podiumHtml;
+
+  // Monta tabela ranking
+  let html="";
+  jogadores.forEach(j=>{
     html += `<tr>
       <td>${j.rank}</td>
       <td>${j.username}</td>
       <td>${j.points}</td>
-      <td>${j.performance || '-'}</td>
-      <td>${streakHtml}</td>
+      <td>${j.performance}</td>
+      <td>${j.seq}</td>
     </tr>`;
   });
   document.getElementById("ranking").innerHTML = html;
@@ -157,18 +193,17 @@ fetch("https://lichess.org/api/swiss/qMebYahN/games", { headers:{ "Accept":"appl
 
   let rodadaNum = 1;
   let html="";
-  for(let i=0; i<jogosArr.length; i+=jogosPorRodada){
-    let rodadaJogos = jogosArr.slice(i, i+jogosPorRodada);
-    html += `<div class="rodada"><h3>Rodada ${rodadaNum}</h3>`;
+  for(let i=0;i<jogosArr.length;i+=jogosPorRodada){
+    let rodadaJogos = jogosArr.slice(i,i+jogosPorRodada);
+    html+=`<div class="rodada"><h3>Rodada ${rodadaNum}</h3>`;
     rodadaJogos.forEach(g=>{
       let w=g.players.white?.user?.name||"BYE";
       let b=g.players.black?.user?.name||"BYE";
-      html += `<button onclick="abrirPartida('${g.id}')">${w} vs ${b}</button>`;
+      html+=`<button onclick="abrirPartida('${g.id}')">${w} vs ${b}</button>`;
     });
-    html += "</div>";
+    html+="</div>";
     rodadaNum++;
   }
-
   document.getElementById("jogos").innerHTML = html;
 });
 
